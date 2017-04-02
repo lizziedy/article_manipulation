@@ -7,7 +7,7 @@ import os
 import nltk.data
 from nltk import sentiment
 import re
-from emolex import EmoSentFinder
+from analysis.emolex import EmoSentFinder
 import json
 import pdb
 import operator
@@ -132,6 +132,21 @@ def transform_baseline(baseline):
 
     return tb
 
+def transform_baselines(test_article_path='articles/test_articles.json',
+                        output='baseline/test_articles.json'):
+    test_articles = mph.read_json(test_article_path)
+
+    baselines = {}
+    
+    for article_id, article_info in test_articles.items():
+        baseline = get_baseline(article_info)
+        transformed_baseline = transform_baseline(baseline)
+        mph.print_json(transformed_baseline)
+        baselines[article_id] = transformed_baseline
+
+    mph.write_json(baselines, output)
+    
+
 def main():
     test_articles = mph.read_json('articles/test_articles.json')
 
@@ -143,7 +158,7 @@ def main():
         mph.print_json(transformed_baseline)
         baselines[article_id] = transformed_baseline
 
-    mph.write_json(baselines, 'baseline_match/test_articles.json')
+    mph.write_json(baselines, 'baseline/test_articles.json')
 
 if __name__ == '__main__':
     main()

@@ -112,8 +112,10 @@ def merge_reviews(complete_review_list, new_review):
     for key in complete_review_list.keys():
         new_key = list(new_review[key].keys())[0]
         complete_review_list[key][new_key] = new_review[key][new_key]
-            
-def get_article_reviews(test_articles_info, reviews_output, non_reviewers_output):
+
+def get_article_reviews(test_articles_path='articles/test_articles.json', reviews_output='articles/reviews.json', non_reviewers_output='articles/non_reviewers.json'):
+    test_articles_info = mph.read_json(test_articles_path)
+    
     non_responders = {}
 
     article_reviews = {}
@@ -298,6 +300,14 @@ def add_people_stats(people_stats, name1, name2, does_agree):
         people_stats[name1]['disagree'] += 1
         people_stats[name2]['disagree'] += 1
 
+def add_stats(total_stats):
+    for name, stats in total_stats.items():
+        if stats['agree'] + stats['disagree'] == 0:
+            continue
+        else:
+            percentage = (stats['agree']/float(stats['agree'] + stats['disagree'])) * 100
+            total_stats[name]['agreement_perc']=percentage
+
 def print_stats(total_stats):
     for name, stats in total_stats.items():
         if stats['agree'] + stats['disagree'] == 0:
@@ -388,59 +398,18 @@ def get_agreement(name1, review1, name2, review2, stats, people_stats = None):
             else:
                 stats[NEU_SENT]['agree'] += 1
 
-            if review1[SENT] != review2[SENT] and review1[SENT] != 'Neutral' and review2[SENT] != 'Neutral':
-                print(review1[ID])
-                print(name2)
-                print("review1: " + review1[SENT] + '\t   review2: ' + review2[SENT])
-                mph.print_json(review1['old']['emotions_counting_negation'])
-                mph.print_json(review1['old']['sentiments_counting_negation'])
-                if 'sentence' in review1['old']:
-                    mph.print_json(review1['old']['sentence'])
-                print()
+            # Analysis of why automated not working great
+            ## if review1[SENT] != review2[SENT] and review1[SENT] != 'Neutral' and review2[SENT] != 'Neutral':
+            ##     print(review1[ID])
+            ##     print(name2)
+            ##     print("review1: " + review1[SENT] + '\t   review2: ' + review2[SENT])
+            ##     mph.print_json(review1['old']['emotions_counting_negation'])
+            ##     mph.print_json(review1['old']['sentiments_counting_negation'])
+            ##     if 'sentence' in review1['old']:
+            ##         mph.print_json(review1['old']['sentence'])
+            ##     print()
 
-        ## for item in [SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN]:
-        ##     if review1[item] == review2[item]:
-        ##         stats[item]['agree'] += 1
-        ##         add_people_stats(people_stats, name1, name2, True)
-        ##     else:
-        ##         stats[item]['disagree'] += 1
-        ##         add_people_stats(people_stats, name1, name2, False)
-
-        ## if (review1[EMO_1] == review2[EMO_1] or review1[EMO_1] == review2[EMO_2]) and (review1[EMO_2] == review2[EMO_1] or review1[EMO_2] == review2[EMO_2]):
-        ##     stats[EMO_ALL]['agree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, True)
-        ## else:
-        ##     stats[EMO_ALL]['disagree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, False)
-
-        ## if (review1[EMO_1] == review2[EMO_1] or review1[EMO_1] == review2[EMO_2]) or (review1[EMO_2] == review2[EMO_1] or review1[EMO_2] == review2[EMO_2]):
-        ##     stats[EMO_SOME]['agree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, True)
-        ## else:
-        ##     stats[EMO_SOME]['disagree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, False)
-
-        ## if review1[PERS_MAN] == 'Neither' and review2[PERS_MAN] == 'Neither':
-        ##     stats[NEI_PERS_MAN]['agree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, True)
-        ## elif review1[PERS_MAN] != 'Neither' and review2[PERS_MAN] != 'Neither':
-        ##     stats[NEI_PERS_MAN]['agree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, True)
-        ## else:
-        ##     stats[NEI_PERS_MAN]['disagree'] += 1
-        ##     add_people_stats(people_stats, name1, name2, False)
-
-        ## if (review1[SUBJ_OBJ] == 'Subjective' and review2[SUBJ_OBJ] == 'Objective') or (review1[SUBJ_OBJ] == 'Objective' and review2[SUBJ_OBJ] == 'Subjective'):
-        ##     stats[NEI_SUBJ_OBJ]['disagree'] += 1
-        ## else:
-        ##     stats[NEI_SUBJ_OBJ]['agree'] += 1
-
-        ## if (review1[SENT] == 'Positive' and review2[SENT] == 'Negative') or (review1[SENT] == 'Negative' and review2[SENT] == 'Positive'):
-        ##     stats[NEU_SENT]['disagree'] += 1
-        ## else:
-        ##     stats[NEU_SENT]['agree'] += 1
-
-def get_agreement_statistics_with_other(reviews, master):
+def get_agreement_statistics_with_other(reviews, other, output, has_reviewers=True):
     article_stats, paragraph_stats, sentence_stats = get_baseline_stats()
 
     for article_review_id, article_review in reviews.items():
@@ -458,25 +427,37 @@ def get_agreement_statistics_with_other(reviews, master):
                     stats = article_stats
                 else:
                     continue
-                
-                for name, review in content_reviews.items():
-                    if content_review_id in master[article_review_id]:
-                        get_agreement('master', master[article_review_id][content_review_id], name, review, stats)
+
+                if has_reviewers:
+                    for name, review in content_reviews.items():
+                        if content_review_id in other[article_review_id]:
+                            get_agreement('other1', other[article_review_id][content_review_id], name, review, stats)
+                else:
+                    if content_review_id in other[article_review_id]:
+                        get_agreement('other1', other[article_review_id][content_review_id], 'other2', content_reviews, stats)
                     
     print("Article:")
+    add_stats(article_stats)
     print_stats(article_stats)
     print()
     print("Paragraph:")
+    add_stats(paragraph_stats)
     print_stats(paragraph_stats)
     print()
     print("Sentence:")
+    add_stats(sentence_stats)
     print_stats(sentence_stats)
 
-            
-def get_agreement_statistics(reviews):
-    article_stats, paragraph_stats, sentence_stats = get_baseline_stats()
+    agreement_stats = {}
+    agreement_stats['article'] = article_stats
+    agreement_stats['paragraph'] = paragraph_stats
+    agreement_stats['sentence'] = sentence_stats
 
-    people_stats = {}
+    mph.write_json(agreement_stats, output)
+
+            
+def get_agreement_statistics(reviews, output='articles/review_agreement_stats.json'):
+    article_stats, paragraph_stats, sentence_stats = get_baseline_stats()
     
     for article_review_id, article_review in reviews.items():
         if article_review:
@@ -500,19 +481,27 @@ def get_agreement_statistics(reviews):
                 else:
                     continue
 
-                get_agreement(name1, reviewer1, name2, reviewer2, stats, people_stats)
+                get_agreement(name1, reviewer1, name2, reviewer2, stats)
 
     print("Article:")
+    add_stats(article_stats)
     print_stats(article_stats)
     print()
     print("Paragraph:")
+    add_stats(paragraph_stats)
     print_stats(paragraph_stats)
     print()
     print("Sentence:")
+    add_stats(sentence_stats)
     print_stats(sentence_stats)
-    print()
-    print("People:")
-    print_stats(people_stats)
+    
+    agreement_stats = {}
+    agreement_stats['article'] = article_stats
+    agreement_stats['paragraph'] = paragraph_stats
+    agreement_stats['sentence'] = sentence_stats
+
+    mph.write_json(agreement_stats, output)
+
 
 ################################################################################
 ## OTHER
@@ -533,25 +522,24 @@ def see_reviews():
     print()
     print(json.dumps(non_reviewers, indent=2, separators=(',', ': ')))
 
-def get_reviewer_agreement_statistics():
-    reviews = mph.read_json('articles/reviews.json')
-    get_agreement_statistics(reviews)
+def get_reviewer_agreement_statistics(review_path='articles/reviews.json', output='articles/review_agreement_stats.json'):
+    reviews = mph.read_json(review_path)
+    get_agreement_statistics(reviews, output)
 
-def get_other_agreement_statistics(other_file_path):
-    reviews = mph.read_json('articles/reviews.json')
+def get_other_agreement_statistics(other_file_path, output, review_path='articles/reviews.json', has_reviewers=True):
+    reviews = mph.read_json(review_path)
     other = mph.read_json(other_file_path)
     
-    get_agreement_statistics_with_other(reviews, other)
+    get_agreement_statistics_with_other(reviews, other, output, has_reviewers)
 
-def create_master():
-    reviews = mph.read_json('articles/reviews.json')
+def create_master(review_path='articles/reviews.json', output_json='articles/master_reviews.json', output_csv='articles/master_reviews.csv'):
+    reviews = mph.read_json(review_path)
     master_dict = create_master_dict(reviews)
-    mph.write_json(master_dict, 'articles/master_reviews.json')
-    master_to_csv(master, SENTENCE_RE, 'articles/master_reviews.csv')
+    mph.write_json(master_dict, output_json)
+    master_to_csv(master_dict, SENTENCE_RE, output_csv)
     
 def main():
-    test_articles_info = mph.read_json('articles/test_articles.json')
-    get_article_reviews(test_articles_info, 'articles/reviews.json', 'articles/non_reviewers.json')
+    get_article_reviews('articles/test_articles.json', 'articles/reviews.json', 'articles/non_reviewers.json')
     
     ## test_articles_info = {'asdf':{"file_path":"articles/immigration/judge-immigration-agents-suing-obama-can-move-forward.txt",
     ##                               "id":'asdf',
