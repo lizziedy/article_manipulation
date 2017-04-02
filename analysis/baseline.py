@@ -133,7 +133,7 @@ def get_neutral_words(article_path):
                 print(article_path)
                     
             
-def get_article_baseline(article_path):
+def get_article_baseline(article_path, topic):
     article_text = mph.read_file(article_path)
     article_id, article_dict = mph.parse_article(article_text)
     
@@ -144,6 +144,20 @@ def get_article_baseline(article_path):
     with open('baseline/' + topic + '/' + article_json_name, 'w') as f:
         f.write(json.dumps(article_dict, indent=2, separators=(',', ': '), sort_keys=True))
     print('wrote: ' + article_json_name)
+
+def get_baselines(topics = ['stock', 'immigration', 'education'], year_range = range(2007, 2017)):
+    for topic in topics:
+        for year in year_range:
+            with open('articles/' + topic + '/' + str(year) + '_' + str(year+1) + '.json') as f:
+                file_metadata_dict = json.load(f)
+
+            for file_metadata in file_metadata_dict.values():
+                # get_neutral_words(file_metadata['file_path'])
+                try:
+                    get_article_baseline(file_metadata['file_path'])
+                except:
+                    print('error getting baseline for ' + file_metadata['file_path'])
+    
             
 if __name__ == '__main__':
     topic = "stock"
@@ -154,7 +168,7 @@ if __name__ == '__main__':
         for file_metadata in file_metadata_dict.values():
             # get_neutral_words(file_metadata['file_path'])
             try:
-                get_article_baseline(file_metadata['file_path'])
+                get_article_baseline(file_metadata['file_path'], topic)
             except:
                 print('error getting baseline for ' + file_metadata['file_path'])
     

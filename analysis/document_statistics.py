@@ -210,9 +210,8 @@ def add_sentiment_to_files(file_paths, sentiment_numbers, level="article"):
             with open(file_path + filename, 'w') as f:
                 f.write(json.dumps(article_info, indent=2, separators=(',', ': '), sort_keys=True))
             #print('wrote: ' + file_path + filename)
-    
-if __name__ == '__main__':
-    file_paths = ['baseline/education/', 'baseline/stock/'] #'baseline/immigration'
+
+def add_sentiments(file_paths = ['baseline/education/', 'baseline/stock/', 'baseline/immigration/']):
     sents = get_sentiment_numbers(file_paths, "article")
     add_sentiment_to_files(file_paths, sents, "article")
     sents = get_sentiment_numbers(file_paths, "paragraph")
@@ -220,7 +219,13 @@ if __name__ == '__main__':
     sents = get_sentiment_numbers(file_paths, "sentence")
     add_sentiment_to_files(file_paths, sents, "sentence")
 
+def add_manipulation(file_paths = ['baseline/education/', 'baseline/stock/', 'baseline/immigration/']):
     add_manipulative_to_files(file_paths)
+            
+if __name__ == '__main__':
+    file_paths = ['baseline/education/', 'baseline/stock/'] #'baseline/immigration'
+    add_sentiments(file_paths)
+    add_manipulation(file_paths)
     
     #graph_occurrences(sents)
     #sentiment_info(sents)
