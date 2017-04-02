@@ -1,9 +1,9 @@
 import http.client, urllib.request, urllib.parse, urllib.error, base64, json, requests
+import os
 
 from bs4 import BeautifulSoup
 
 import datetime
-
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 
@@ -150,7 +150,14 @@ def days_since_epoch(date):
     seconds = (date - epoch).total_seconds()
     days = int(seconds / 60 / 60 / 24)
     return days
-    
+
+def retrieve_news_urls(topics = ['education', 'stock', 'immigration'], year_start=2007, year_end=2017, base_directory='websites', news_source = 'foxnews.com'):
+    if not os.path.exists(base_directory):
+        os.makedirs(base_directory)
+    for topic in topics:
+        outpath = os.path.join(base_directory, topic + '_' + str(year_start) + '_' + str(year_end) + '.json')
+        export_urls(topic, news_source, year_start, year_end, outpath)
+
 if __name__ == '__main__':
     query_info = export_urls('education', 'foxnews.com', 2016, 2017, 'education_2016_2017.json')
 

@@ -16,6 +16,8 @@ import nltk.data
 
 import pdb
 
+import masters_project_helper as mph
+
 # installed http://www.nltk.org/
 #   after installing, need to download supporting data. open python terminal.
 #     # import nltk
@@ -36,7 +38,7 @@ URLS_TO_IGNORE = [
 
 SENTENCE_DETECTOR = nltk.data.load('tokenizers/punkt/english.pickle')
     
-def get_articles(json_file, start_year, end_year):
+def get_articles(json_file, start_year, end_year, output_base_dir):
     with open(json_file) as json_data:
         article_info = json.load(json_data)
     urls_with_dates = article_info['urls']
@@ -49,9 +51,8 @@ def get_articles(json_file, start_year, end_year):
             urls_to_use += urls_with_date['urls']
 
     metadata = output_urls(urls_to_use, topic)
-
-    with open('articles/' + topic + '/' + str(start_year) + '_' + str(end_year) + '.json', 'w') as out_file:
-        out_file.write(json.dumps(metadata, indent=2, separators=(',', ': ')))
+    output_path = os.path.join(output_base_dir, topic, str(start_year) + '_' + str(end_year) + '.json')
+    mph.write_json(metadata, output_path)
 
 def output_urls(urls, topic):
     all_metadata = {}
@@ -158,8 +159,14 @@ def parse_website(web_text, url, topic):
 
     return (article_text, metadata)
 
+def get_all_articles(topics = ['education', 'stock', 'immigration'], url_base_directory='websites', url_year_range=range(2007, 2017), output_base_dir='articles', year_range = range(2007, 2017)):
+    for topic in topics:
+        url_file = os.path.join(url_base_directory, topic + '_' + str(url_year_range[0]) + '_' + str(url_year_range[-1] + 1) + '.json')
+        for year in year_range:
+            get_articles(url_file, year, year + 1, output_base_dir)
+
 if __name__ == '__main__':
     for year in range(2007, 2017):
-        get_articles("websites/education_2007_2017.json", year, year + 1)
+        get_articles("websites/immigration_2007_2017.json", year, year + 1, 'articles')
     
 

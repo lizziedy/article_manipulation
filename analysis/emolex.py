@@ -55,7 +55,7 @@ class EmoSentFinder:
                     'positive':['joy', 'surprise']}
         
 
-    def __init__(self, emolex_file = "NRC-emotion-lexicon-wordlevel-alphabetized-v0.92.txt"):
+    def __init__(self, emolex_file = "analysis/NRC-emotion-lexicon-wordlevel-alphabetized-v0.92.txt"):
         emolex_regex = re.compile('(.+)\t(.+)\t(\d)')
         self._emolex_dict = {}
         self._lemmatizer = WordNetLemmatizer()

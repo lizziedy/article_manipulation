@@ -6,7 +6,7 @@ import os
 import nltk.data
 from nltk import sentiment
 import re
-from emolex import EmoSentFinder
+from analysis.emolex import EmoSentFinder
 import json
 import pdb
 
@@ -154,7 +154,7 @@ def get_baselines(topics = ['stock', 'immigration', 'education'], year_range = r
             for file_metadata in file_metadata_dict.values():
                 # get_neutral_words(file_metadata['file_path'])
                 try:
-                    get_article_baseline(file_metadata['file_path'])
+                    get_article_baseline(file_metadata['file_path'], topic)
                 except:
                     print('error getting baseline for ' + file_metadata['file_path'])
     
