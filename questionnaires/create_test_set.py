@@ -1,6 +1,7 @@
 import copy
 import random
 import json
+import masters_project_helper as mph
 
 MAX_WORD_COUNT = 562 # determined by looking at average word counts across articles
 
@@ -23,11 +24,9 @@ def get_articles(article_file):
     '''
     articles = {}
     try:
-        with open(article_file) as f:
-            articles = json.load(f)
+        articles = mph.read_json(article_file)
     except Exception as e:
-        # file does not yet exist
-        print(e)
+        print(article_file + " does not yet exist. Returning empty file set.")
 
     return articles
 
@@ -57,15 +56,6 @@ def select_random_articles(articles, num_to_select):
 
     return random_articles
 
-def output_test_articles(test_articles, test_file_path):
-    '''
-    outputs the test_articles json to test_file_path
-    '''
-    output_string = json.dumps(test_articles, indent=2, separators=(',', ': '))
-    f = open(test_file_path, 'w')
-    f.write(output_string)
-    f.close()
-
 def create_test_articles(topics = ['immigration', 'stock', 'education'], year_range = range(2007, 2017), test_file_path = 'articles/test_articles.json', base_article_path = 'articles', num_new_test_articles=40):
     '''
     adds num_new_test_articles test articles to the file list of test articles
@@ -77,14 +67,14 @@ def create_test_articles(topics = ['immigration', 'stock', 'education'], year_ra
     all_articles = {}
     for topic in topics:
         for year in year_range:
-            file_path = base_article_path + topic + '/' + str(year) + '_' + str(year + 1) + '.json'
-            word_count_file_path = base_article_path + topic + '/word_counts_' + str(year) + '_' + str(year + 1) + '.json'
+            file_path = base_article_path + '/' + topic + '/' + str(year) + '_' + str(year + 1) + '.json'
+            word_count_file_path = base_article_path +'/' + topic + '/word_counts_' + str(year) + '_' + str(year + 1) + '.json'
             all_articles.update(get_articles_under_word_count(file_path, word_count_file_path))
 
     non_test_articles = remove_test_articles(all_articles, test_articles)
     new_test_articles = select_random_articles(non_test_articles, num_new_test_articles)
     test_articles.update(new_test_articles)
-    output_test_articles(test_articles, test_file_path)
+    mph.write_json(test_articles, test_file_path)
     return test_articles
 
 if __name__ == "__main__":

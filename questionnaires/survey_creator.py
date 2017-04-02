@@ -138,6 +138,7 @@ def create_surveys(topics = ['immigration', 'education', 'stock'],
 
     for topic in topics:
         for year in year_range:
+            print(year)
             errors = create_surveys_for_topic_and_year(topic, year, base_article_dir)
             all_errors += errors
 
