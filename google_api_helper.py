@@ -28,7 +28,7 @@ TEXT_TYPE = 'text/plain'
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/drive'
-CLIENT_SECRET_FILE = 'client_secret_drive2.json'
+CLIENT_SECRET_FILE = 'questionnaires/client_secret_drive.json'
 APPLICATION_NAME = 'Survey Creator'
 
 def _get_credentials():
@@ -117,9 +117,10 @@ def add_file_to_drive(article_name, article_path, parent_id, mime_type):
     }
     media = MediaFileUpload(article_path,
                             mimetype=mime_type)
-    file = _drive_service.files().create(body=file_metadata,
-                                        media_body=media,
-                                        fields='id, webViewLink').execute()
+    new_file = _drive_service.files().create(body=file_metadata,
+                                             media_body=media,
+                                             fields='id, webViewLink').execute()
+    return new_file
 
 def get_or_create_drive_object(name, parent_id, mime_type):
     drive_object = get_drive_object(name, parent_id, mime_type)
@@ -159,3 +160,62 @@ def get_sheets_values(file_id, sheet_name, data_range, value_keys, key_index = 0
             values_dict[row[key_index]] = dict(zip(value_keys, row))
     return values_dict
     
+@rate_limiter.RateLimited(1.5)
+def delete_all_other_sheets(file_id, keepSheetId):
+    spreadsheet = get_sheets_spreadsheet(file_id)
+    requests = []
+    for sheet in spreadsheet.get('sheets'):
+        sheetId = sheet.get('properties').get('sheetId')
+        if sheetId != keepSheetId:
+            requests.append({
+                'deleteSheet': {
+                    'sheetId':sheetId
+                }
+            })
+
+    if len(requests) > 0:
+        body = {
+            'requests': requests
+        }
+        response = _sheets_service.spreadsheets().batchUpdate(spreadsheetId=file_id,
+                                                             body=body).execute()
+
+@rate_limiter.RateLimited(1.5)  
+def rename_sheet(file_id, sheet_id):
+    requests = []
+    requests.append({
+        'updateSheetProperties': {
+            'properties': {
+                'sheetId': sheet_id,
+                'title': 'Questionnaire'
+            },
+            'fields': 'title'
+        }
+    })    
+    body = {
+        'requests': requests
+    }
+    response = _sheets_service.spreadsheets().batchUpdate(spreadsheetId=file_id,
+                                                         body=body).execute()
+
+@rate_limiter.RateLimited(1.5)
+def copy_sheet(file_id, template_id):
+    sheet = _sheets_service.spreadsheets().sheets().copyTo(
+        spreadsheetId=template_id,
+        sheetId=0,
+        body={"destinationSpreadsheetId": file_id}
+        ).execute()
+    return sheet
+
+@rate_limiter.RateLimited(1.5)
+def add_sheet_column_data(sheet_id, cell_start_col, cell_start_row, data, sheet_name):
+    sheet_range = sheet_name + '!' + cell_start_col + str(cell_start_row) + ':' + cell_start_col + str(int(cell_start_row) + len(data))
+    body={'range':sheet_range,
+          'majorDimension':"COLUMNS",
+          'values':[data]}
+
+    result = _sheets_service.spreadsheets().values().update(
+        spreadsheetId=sheet_id,
+        range=sheet_range,
+        valueInputOption="RAW",
+        body=body).execute()

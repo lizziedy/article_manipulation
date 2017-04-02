@@ -66,23 +66,19 @@ def output_test_articles(test_articles, test_file_path):
     f.write(output_string)
     f.close()
 
-def create_test_articles(num_new_test_articles):
+def create_test_articles(topics = ['immigration', 'stock', 'education'], year_range = range(2007, 2017), test_file_path = 'articles/test_articles.json', base_article_path = 'articles', num_new_test_articles=40):
     '''
     adds num_new_test_articles test articles to the file list of test articles
     '''
     random.seed()
     
-    topics = ['immigration', 'stock', 'education']
-    years = range(2007, 2017)
-    test_file_path = 'articles/test_articles.json'
-    
     test_articles = get_articles(test_file_path)
 
     all_articles = {}
     for topic in topics:
-        for year in years:
-            file_path = 'articles/' + topic + '/' + str(year) + '_' + str(year + 1) + '.json'
-            word_count_file_path = 'articles/' + topic + '/word_counts_' + str(year) + '_' + str(year + 1) + '.json'
+        for year in year_range:
+            file_path = base_article_path + topic + '/' + str(year) + '_' + str(year + 1) + '.json'
+            word_count_file_path = base_article_path + topic + '/word_counts_' + str(year) + '_' + str(year + 1) + '.json'
             all_articles.update(get_articles_under_word_count(file_path, word_count_file_path))
 
     non_test_articles = remove_test_articles(all_articles, test_articles)
