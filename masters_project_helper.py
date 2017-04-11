@@ -22,6 +22,8 @@ QUOTE = 'Quote Used or Referenced'
 NON_NEUT = 'Non-Neutral Word Used'
 SUBJ_OBJ = 'Subjective, Objective, or Neither'
 PERS_MAN = 'Persuasive, Manipulative, or Neither'
+NEI_PERS_MAN = 'Neither or (Persuasive or Manipulative)'
+PERS_NEI_MAN = '(Neither or Persuasive) or Manipulative'
 
 def apply_function_to_article_metadata(start_year, end_year, topics, func):
     '''

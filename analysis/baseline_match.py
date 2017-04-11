@@ -91,6 +91,22 @@ def get_sentiment(sentiments):
 def get_subjective_objective(subj_obj):
     return subj_obj
 
+def get_persuasive_manipulative(pers_man):
+    return pers_man
+
+def add_manipulative_persuasive(dict, pers_man):
+    dict[mph.PERS_MAN] = transform_concept(pers_man)
+
+    if pers_man == 'manipulative':
+        dict[mph.PERS_NEI_MAN] = 'Manipulative'
+        dict[mph.NEI_PERS_MAN] = 'Manipulative or Persuasive'
+    elif pers_man == 'persuasive':
+        dict[mph.PERS_NEI_MAN] = 'Neither or Persuasive'
+        dict[mph.NEI_PERS_MAN] = 'Manipulative or Persuasive'
+    elif pers_man == 'neither':
+        dict[mph.PERS_NEI_MAN] = 'Neither or Persuasive'
+        dict[mph.NEI_PERS_MAN] = 'Neither'
+
 def transform_statistics(baseline_stats, component_id):
     emo_1, emo_2 = get_primary_and_secondary_emotions(baseline_stats['emotions_counting_negation'])
 
@@ -101,6 +117,8 @@ def transform_statistics(baseline_stats, component_id):
     ## sent = get_sentiment(baseline_stats['sentiments'])
     
     subj_obj = get_subjective_objective(baseline_stats['subjective_or_objective'])
+
+    pers_man = get_persuasive_manipulative(baseline_stats['manipulative_or_persuasive'])
     
     new_stats =  {mph.EMO_1: transform_concept(emo_1),
                   mph.EMO_2: transform_concept(emo_2),
@@ -109,6 +127,8 @@ def transform_statistics(baseline_stats, component_id):
                   mph.NA: False,
                   mph.ID: component_id,
                   'old': baseline_stats}
+    add_manipulative_persuasive(new_stats, get_persuasive_manipulative(baseline_stats['manipulative_or_persuasive']))
+    
     return new_stats
 
 def transform_baseline(baseline):

@@ -48,7 +48,7 @@ NEI_PERS_MAN = 'Neither or (Persuasive or Manipulative)'
 PERS_NEI_MAN = '(Neither or Persuasive) or Manipulative'
 
 KEYS = [ID, NA, EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN, NEI_PERS_MAN, PERS_NEI_MAN]
-CSV_KEYS = [EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN, NEI_PERS_MAN, PERS_NEI_MAN]
+CSV_KEYS = [ID, EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN, NEI_PERS_MAN, PERS_NEI_MAN]
 #CSV_KEYS = [EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN]
 TRANSFORM_KEYS = [EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ]
 
@@ -71,21 +71,35 @@ def sample():
     
     dataset.plot(kind='box', subplots=True, layout=(2,2), sharex=False, sharey=False)
     plt.show()
+
+def create_train_test_sets(data_path='articles/master_reviews.csv', train_path='articles/master_reviews_train.csv', test_path='articles/master_reviews_test.csv', data_keys=CSV_KEYS):
+    dataset = pandas.read_csv(data_path, names=data_keys)
+    train_set, test_set = model_selection.train_test_split(dataset, test_size=.2, random_state=7)
+    train_set.to_csv(train_path, header=False)
+    test_set.to_csv(test_path, header=False)
+
+def learn(train_path, data_path, data_keys):
+    pass
     
 def article_data():
     transform_keys = copy.deepcopy(TRANSFORM_KEYS)
     dataset = pandas.read_csv('articles/master_reviews.csv', names=CSV_KEYS)
 
+    d1, d2 = model_selection.train_test_split(dataset, test_size=.2, random_state=82)
+    print(d2)
+
     # NOTE:
     # GEN_ATTR, NON_NEUT, SUBJ_OBJ do not seem to contribute much to accuracy
     # Opinion stated as fact does
     # Opinion stated as fact is hard to detect.
-    del_keys = [PERS_NEI_MAN, PERS_MAN]#, QUOTE, OPINION, GEN_ATTR, NON_NEUT]#GEN_ATTR, NON_NEUT, SUBJ_OBJ
+    del_keys = [ID, PERS_MAN, NEI_PERS_MAN, QUOTE, OPINION, GEN_ATTR, NON_NEUT]#GEN_ATTR, NON_NEUT, SUBJ_OBJ
     print(del_keys)
     for del_key in del_keys:
-        del dataset[del_key]
+        if del_key in dataset:
+            del dataset[del_key]
         if del_key in transform_keys:
             transform_keys.remove(del_key)
+    print(transform_keys)
 
     dataset_dummies = pandas.get_dummies(dataset, columns=transform_keys)
 

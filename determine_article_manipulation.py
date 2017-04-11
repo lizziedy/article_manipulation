@@ -4,6 +4,7 @@ import analysis.document_statistics as ds
 import analysis.baseline as bl
 import analysis.get_reviewer_analysis as gra
 import analysis.baseline_match as blm
+import analysis.machine_learn_reviews as mlr
 
 import news_retrieval.news_url_retriever as nur
 import news_retrieval.news_getter as ng
@@ -88,7 +89,10 @@ def analyze_automated_reviews():
     blm.transform_baselines()
     gra.get_other_agreement_statistics('baseline/test_articles.json', 'articles/automated_agreement_stats.json')
     gra.get_other_agreement_statistics('baseline/test_articles.json', 'articles/automated_master_agreement_stats.json', review_path='articles/master_reviews.json', has_reviewers=False)
-        
+
+def do_machine_learning():
+    mlr.article_data()
+    
 if __name__ == '__main__':
     print("Hello!")
     #get_articles()
@@ -98,5 +102,10 @@ if __name__ == '__main__':
     #assign_reviewers_to_articles('articles/test_articles.json', 3, 3, [{'name':'Dawn Stapleton'},])
     #retrieve_reviews()
     #analyze_reviews()
-    #analyze_automated_reviews()
+    analyze_automated_reviews()
+    #do_machine_learning()
+    
+    #blm.transform_baselines()
+    #gra.json_data_to_csv('articles/master_reviews.json', 'articles/master_reviews.csv')
+    #mlr.create_train_test_sets()
     

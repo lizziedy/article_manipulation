@@ -35,7 +35,7 @@ NEU_SENT = '(Neutral or Negative) or (Neutral or Positive)'
 
 
 KEYS = [ID, NA, EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN]
-CSV_KEYS = [EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN, NEI_PERS_MAN, PERS_NEI_MAN]
+CSV_KEYS = [ID, EMO_1, EMO_2, SENT, OPINION, GEN_ATTR, QUOTE, NON_NEUT, SUBJ_OBJ, PERS_MAN, NEI_PERS_MAN, PERS_NEI_MAN]
 
 ################################################################################
 ## GET REVIEWS
@@ -259,18 +259,25 @@ def create_master_dict(reviews):
                     
     return master_reviews
 
-def master_to_csv(master, type_re, file_path):
+def json_data_to_csv(json_path, output_path, type_re=SENTENCE_RE):
+    data = mph.read_json(json_path)
+    data_to_csv(data, type_re, output_path)
+
+def data_to_csv(data, type_re, file_path):
     # type_re is the regex for sentence, article, paragraph
     review_array = []
-    for review_id, review in master.items():
+    for review_id, review in data.items():
         for content_id, content in review.items():
             if not type_re.match(content_id):
                 continue
-            if content[NA]:
+            if NA in content and content[NA]:
                 continue
             review = []
             for key in CSV_KEYS:
-                review.append(content[key])
+                if key == ID:
+                    review.append(review_id + content[key])
+                else:
+                    review.append(content[key])
             review_array.append(review)
 
     with open(file_path, 'w') as csvfile:
@@ -328,6 +335,7 @@ def get_baseline_stats():
                     SUBJ_OBJ : {'agree': 0, 'disagree': 0},
                     PERS_MAN : {'agree': 0, 'disagree': 0},
                     NEI_PERS_MAN : {'agree': 0, 'disagree': 0},
+                    PERS_NEI_MAN : {'agree': 0, 'disagree': 0},
                     NEI_SUBJ_OBJ : {'agree': 0, 'disagree': 0},
                     NEU_SENT : {'agree': 0, 'disagree': 0}}
     sentence_stats = copy.deepcopy(article_stats)
@@ -384,6 +392,17 @@ def get_agreement(name1, review1, name2, review2, stats, people_stats = None):
                 add_people_stats(people_stats, name1, name2, True)
             else:
                 stats[NEI_PERS_MAN]['disagree'] += 1
+                add_people_stats(people_stats, name1, name2, False)
+
+
+            if review1[PERS_MAN] == 'Manipulative' and review2[PERS_MAN] == 'Manipulative':
+                stats[PERS_NEI_MAN]['agree'] += 1
+                add_people_stats(people_stats, name1, name2, True)
+            elif review1[PERS_MAN] != 'Manipulative' and review2[PERS_MAN] != 'Manipulative':
+                stats[PERS_NEI_MAN]['agree'] += 1
+                add_people_stats(people_stats, name1, name2, True)
+            else:
+                stats[PERS_NEI_MAN]['disagree'] += 1
                 add_people_stats(people_stats, name1, name2, False)
 
         if item == SUBJ_OBJ:
@@ -536,7 +555,7 @@ def create_master(review_path='articles/reviews.json', output_json='articles/mas
     reviews = mph.read_json(review_path)
     master_dict = create_master_dict(reviews)
     mph.write_json(master_dict, output_json)
-    master_to_csv(master_dict, SENTENCE_RE, output_csv)
+    data_to_csv(master_dict, SENTENCE_RE, output_csv)
     
 def main():
     get_article_reviews('articles/test_articles.json', 'articles/reviews.json', 'articles/non_reviewers.json')
