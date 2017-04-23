@@ -78,21 +78,81 @@ def create_train_test_sets(data_path='articles/master_reviews.csv', train_path='
     train_set.to_csv(train_path, header=False)
     test_set.to_csv(test_path, header=False)
 
+
+    
 def learn(train_path, data_path, data_keys):
     pass
-    
-def article_data():
-    transform_keys = copy.deepcopy(TRANSFORM_KEYS)
-    dataset = pandas.read_csv('articles/master_reviews.csv', names=CSV_KEYS)
 
-    d1, d2 = model_selection.train_test_split(dataset, test_size=.2, random_state=82)
-    print(d2)
+def train_feature_data(csv_file='features/features.csv'):
+    dataset = pandas.read_csv(csv_file)
+    
+    del_keys = [ID, NEI_PERS_MAN, PERS_MAN]
+    for del_key in del_keys:
+        if del_key in dataset:
+            del dataset[del_key]
+    #['stop_word_perc', 'direct_speech', 'special_punctuation', 'upper_case', 'num_words', 'pos_total', 'verb_count', 'has_negation', 'emo', 'sent']
+    del_keys_start = []
+    for del_key_start in del_keys_start:
+        for key in dataset.keys():
+            if key.startswith(del_key_start):
+                del dataset[key]
+                print('removed ' + key)
+
+
+    # Split-out validation dataset
+    array = dataset.values
+    X = array[:,0:dataset.shape[1]-1]
+    Y = array[:,dataset.shape[1]-1:dataset.shape[1]]
+    validation_size = 0.20
+    seed = 7
+    X_train, X_validation, Y_train, Y_validation = model_selection.train_test_split(X, Y, test_size=validation_size, random_state=5667489)
+
+    Y_train = Y_train.ravel()
+    Y_validation = Y_validation.ravel()
+    
+    seed = 7
+    scoring = 'accuracy'
+
+    # Spot Check Algorithms
+    models = []
+    models.append(('LR', LogisticRegression()))
+    #models.append(('LDA', LinearDiscriminantAnalysis())) # too much collinearity
+    models.append(('KNN', KNeighborsClassifier()))
+    models.append(('CART', DecisionTreeClassifier()))
+    models.append(('NB', GaussianNB()))
+    models.append(('SVM', SVC()))
+    # evaluate each model in turn
+    results = []
+    names = []
+    for name, model in models:
+        kfold = model_selection.KFold(n_splits=10, random_state=seed)
+        cv_results = model_selection.cross_val_score(model, X_train, Y_train, cv=kfold, scoring=scoring)
+        results.append(cv_results)
+        names.append(name)
+        msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+        print(msg)
+
+    # Make predictions on validation dataset
+    for name, model in models:
+        print(name)
+        print()
+        knn = model
+        knn.fit(X_train, Y_train)
+        predictions = knn.predict(X_validation)
+        print(accuracy_score(Y_validation, predictions))
+        print(confusion_matrix(Y_validation, predictions))
+        print(classification_report(Y_validation, predictions))
+    
+def article_data(csv_file='articles/master_reviews.csv'):
+    transform_keys = copy.deepcopy(TRANSFORM_KEYS)
+    dataset = pandas.read_csv(csv_file, names=CSV_KEYS)
 
     # NOTE:
     # GEN_ATTR, NON_NEUT, SUBJ_OBJ do not seem to contribute much to accuracy
     # Opinion stated as fact does
     # Opinion stated as fact is hard to detect.
-    del_keys = [ID, PERS_MAN, NEI_PERS_MAN, QUOTE, OPINION, GEN_ATTR, NON_NEUT]#GEN_ATTR, NON_NEUT, SUBJ_OBJ
+    del_keys = [ID, PERS_MAN, NEI_PERS_MAN]#, OPINION]#GEN_ATTR, NON_NEUT, SUBJ_OBJ
+    #del_keys = [ID, PERS_MAN, NEI_PERS_MAN, OPINION, EMO_1, EMO_2, GEN_ATTR, NON_NEUT]
     print(del_keys)
     for del_key in del_keys:
         if del_key in dataset:
@@ -136,22 +196,27 @@ def article_data():
         msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
         print(msg)
 
-    ## # Compare Algorithms
-    ## fig = plt.figure()
-    ## fig.suptitle('Algorithm Comparison')
-    ## ax = fig.add_subplot(111)
-    ## plt.boxplot(results)
-    ## ax.set_xticklabels(names)
-    ## plt.show()
-
     # Make predictions on validation dataset
-    knn = DecisionTreeClassifier()
-    knn.fit(X_train, Y_train)
-    predictions = knn.predict(X_validation)
-    print(accuracy_score(Y_validation, predictions))
-    print(confusion_matrix(Y_validation, predictions))
-    print(classification_report(Y_validation, predictions))
-    
+    for name, model in models:
+        model.fit(X_train, Y_train)
+        predictions = model.predict(X_validation)
+        print()
+        print(name)
+        print(accuracy_score(Y_validation, predictions))
+        print(confusion_matrix(Y_validation, predictions))
+        print(classification_report(Y_validation, predictions))
+
+def make_predictions(models, X_train, Y_train, X_validation, Y_validation):
+    # Make predictions on validation dataset
+    for name, model in models:
+        model.fit(X_train, Y_train)
+        predictions = model.predict(X_validation)
+        print()
+        print(name)
+        print(accuracy_score(Y_validation, predictions))
+        print(confusion_matrix(Y_validation, predictions))
+        print(classification_report(Y_validation, predictions))
+            
 def main():
     article_data()
     #sample()

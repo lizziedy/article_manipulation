@@ -77,8 +77,8 @@ def graph_occurrences(sentiment_numbers):
                 ys.append(count)
                 break
 
-    mean = np.mean(sents)
-    std = np.std(sents)
+    mean = np.mean(sentiment_numbers)
+    std = np.std(sentiment_numbers)
 
     max_count = np.max(ys)
     
@@ -219,15 +219,26 @@ def add_sentiments(file_paths = ['baseline/education/', 'baseline/stock/', 'base
     sents = get_sentiment_numbers(file_paths, "sentence")
     add_sentiment_to_files(file_paths, sents, "sentence")
 
+def get_sentiment_graphs(file_paths):
+    sents = get_sentiment_numbers(file_paths, "sentence")
+    graph_occurrences(sents)
+    sents = get_sentiment_numbers(file_paths, "paragraph")
+    graph_occurrences(sents)
+    sents = get_sentiment_numbers(file_paths, "article")
+    graph_occurrences(sents)
+    
 def add_manipulation(file_paths = ['baseline/education/', 'baseline/stock/', 'baseline/immigration/']):
     add_manipulative_to_files(file_paths)
             
 if __name__ == '__main__':
-    file_paths = ['baseline/education/', 'baseline/stock/'] #'baseline/immigration'
-    add_sentiments(file_paths)
-    add_manipulation(file_paths)
+    file_paths = ['baseline/education/', 'baseline/stock/', 'baseline/immigration']
+    #add_sentiments(file_paths)
+    #add_manipulation(file_paths)
     
-    #graph_occurrences(sents)
+    sents = get_sentiment_numbers(file_paths, "sentence")
+    graph_occurrences(sents)
+    sents = get_sentiment_numbers(file_paths, "paragraph")
+    graph_occurrences(sents)
     #sentiment_info(sents)
 
     ## sents = np.sort(sents)

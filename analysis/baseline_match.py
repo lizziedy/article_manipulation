@@ -95,19 +95,23 @@ def get_persuasive_manipulative(pers_man):
     return pers_man
 
 def add_manipulative_persuasive(dict, pers_man):
-    dict[mph.PERS_MAN] = transform_concept(pers_man)
+    pers_man = transform_concept(pers_man)
+    dict[mph.PERS_MAN] = pers_man
 
-    if pers_man == 'manipulative':
+    if pers_man == 'Manipulative':
         dict[mph.PERS_NEI_MAN] = 'Manipulative'
         dict[mph.NEI_PERS_MAN] = 'Manipulative or Persuasive'
-    elif pers_man == 'persuasive':
+    elif pers_man == 'Persuasive':
         dict[mph.PERS_NEI_MAN] = 'Neither or Persuasive'
         dict[mph.NEI_PERS_MAN] = 'Manipulative or Persuasive'
-    elif pers_man == 'neither':
+    elif pers_man == 'Neither':
         dict[mph.PERS_NEI_MAN] = 'Neither or Persuasive'
         dict[mph.NEI_PERS_MAN] = 'Neither'
 
-def transform_statistics(baseline_stats, component_id):
+def get_persuasive_manipulative_annotated(article_annotated, component_id):
+    return article_annotated[component_id][mph.PERS_MAN]
+        
+def transform_statistics(baseline_stats, component_id, article_annotated=None):
     emo_1, emo_2 = get_primary_and_secondary_emotions(baseline_stats['emotions_counting_negation'])
 
     sent = get_sentiment(baseline_stats['sentiments_counting_negation'])
@@ -118,7 +122,14 @@ def transform_statistics(baseline_stats, component_id):
     
     subj_obj = get_subjective_objective(baseline_stats['subjective_or_objective'])
 
-    pers_man = get_persuasive_manipulative(baseline_stats['manipulative_or_persuasive'])
+    if article_annotated:
+        if component_id not in article_annotated:
+            return None
+        if article_annotated[component_id][mph.NA]:
+            return None
+        pers_man = get_persuasive_manipulative_annotated(article_annotated, component_id)
+    else:
+        pers_man = get_persuasive_manipulative(baseline_stats['manipulative_or_persuasive'])
     
     new_stats =  {mph.EMO_1: transform_concept(emo_1),
                   mph.EMO_2: transform_concept(emo_2),
@@ -127,41 +138,51 @@ def transform_statistics(baseline_stats, component_id):
                   mph.NA: False,
                   mph.ID: component_id,
                   'old': baseline_stats}
-    add_manipulative_persuasive(new_stats, get_persuasive_manipulative(baseline_stats['manipulative_or_persuasive']))
-    
+    add_manipulative_persuasive(new_stats, pers_man)
     return new_stats
 
-def transform_baseline(baseline):
+def transform_baseline(baseline, article_annotated = None):
     tb = {}
-    
     for paragraph_id, paragraph in baseline.items():
         if mph.PARAGRAPH_RE.match(paragraph_id): # we're actually looking at a paragraph
             for sentence_id, sentence in paragraph.items():
                 if mph.SENTENCE_ONLY_RE.match(sentence_id):
                     component_id = paragraph_id + sentence_id
-                    stats = transform_statistics(sentence, component_id)
-                    tb[component_id] = stats
+                    stats = transform_statistics(sentence, component_id, article_annotated)
+                    if stats:
+                        tb[component_id] = stats
 
             component_id = paragraph_id
-            stats = transform_statistics(paragraph, component_id)
-            tb[component_id] = stats
+            stats = transform_statistics(paragraph, component_id, article_annotated)
+            if stats:
+                tb[component_id] = stats
 
     component_id = 'Article'
-    stats = transform_statistics(baseline, component_id)
-    tb[component_id] = stats
+    stats = transform_statistics(baseline, component_id, article_annotated)
+    if stats:
+        tb[component_id] = stats
 
     return tb
 
 def transform_baselines(test_article_path='articles/test_articles.json',
-                        output='baseline/test_articles.json'):
+                        output='baseline/test_articles.json',  use_annotated_results=False,
+                        annotated_results_path='articles/master_reviews.json'):
     test_articles = mph.read_json(test_article_path)
+    annotated_results = None
+    if use_annotated_results:
+        annotated_results = mph.read_json(annotated_results_path)
 
     baselines = {}
     
     for article_id, article_info in test_articles.items():
         baseline = get_baseline(article_info)
-        transformed_baseline = transform_baseline(baseline)
-        mph.print_json(transformed_baseline)
+        article_annotated_results = None
+        if annotated_results:
+            if article_id not in annotated_results:
+                continue
+            article_annotated_results = annotated_results[article_id]
+        transformed_baseline = transform_baseline(baseline, article_annotated_results)
+        #mph.print_json(transformed_baseline)
         baselines[article_id] = transformed_baseline
 
     mph.write_json(baselines, output)
@@ -175,7 +196,7 @@ def main():
     for article_id, article_info in test_articles.items():
         baseline = get_baseline(article_info)
         transformed_baseline = transform_baseline(baseline)
-        mph.print_json(transformed_baseline)
+        #mph.print_json(transformed_baseline)
         baselines[article_id] = transformed_baseline
 
     mph.write_json(baselines, 'baseline/test_articles.json')

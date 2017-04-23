@@ -5,6 +5,7 @@ import analysis.baseline as bl
 import analysis.get_reviewer_analysis as gra
 import analysis.baseline_match as blm
 import analysis.machine_learn_reviews as mlr
+import analysis.test_article_features as taf
 
 import news_retrieval.news_url_retriever as nur
 import news_retrieval.news_getter as ng
@@ -91,7 +92,10 @@ def analyze_automated_reviews():
     gra.get_other_agreement_statistics('baseline/test_articles.json', 'articles/automated_master_agreement_stats.json', review_path='articles/master_reviews.json', has_reviewers=False)
 
 def do_machine_learning():
-    mlr.article_data()
+    #mlr.article_data()
+    #mlr.article_data(csv_file='baseline/test_articles_annotated_results.csv')
+    mlr.sample()
+    
     
 if __name__ == '__main__':
     print("Hello!")
@@ -102,10 +106,21 @@ if __name__ == '__main__':
     #assign_reviewers_to_articles('articles/test_articles.json', 3, 3, [{'name':'Dawn Stapleton'},])
     #retrieve_reviews()
     #analyze_reviews()
-    analyze_automated_reviews()
+    #analyze_automated_reviews()
     #do_machine_learning()
     
-    #blm.transform_baselines()
+    #blm.transform_baselines(output='baseline/test_articles_annotated_results.json', use_annotated_results=True)
     #gra.json_data_to_csv('articles/master_reviews.json', 'articles/master_reviews.csv')
+    #gra.json_data_to_csv('baseline/test_articles_annotated_results.json', 'baseline/test_articles_annotated_results.csv')
+    #gra.json_data_to_csv('baseline/test_articles.json', 'baseline/test_articles.csv')
     #mlr.create_train_test_sets()
-    
+
+    #master_reviews =  mph.read_json('articles/master_reviews.json')
+    #taf.get_article_features("articles/immigration/immigration-bill-goes-down.txt", "immigration", master_reviews)
+    #taf.get_test_article_features()
+    #mlr.train_feature_data('features/immigration/immigration-bill-goes-down.csv')
+    mlr.train_feature_data('features/train_features.csv')
+    #mlr.article_data()
+
+    #ds.get_sentiment_graphs(['baseline/education/', 'baseline/stock/', 'baseline/immigration/'])
+    #gra.get_reviewer_agreement_statistics()

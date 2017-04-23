@@ -79,7 +79,7 @@ class EmoSentFinder:
             if word_pos:
                 self._get_neutral_word(word_pos)
                 
-                    
+    
     def get_sentence_statistics(self, sentence):
         tokens = nltk.word_tokenize(sentence)
         words_pos = nltk.pos_tag(tokens)
@@ -162,6 +162,55 @@ class EmoSentFinder:
 
         return return_hash
 
+    def get_pos_counts(self, sentence):
+        tokens = nltk.word_tokenize(sentence)
+        words_pos = nltk.pos_tag(tokens)
+        non_sw = self.remove_stop_words(tokens)
+
+        pos_dict = {
+            'J':0,
+            'N':0,
+            'V':0,
+            'R':0,
+            'total':len(tokens),
+            'non_sw_total':len(non_sw)
+            }
+
+        for word, pos in words_pos:
+            if pos.startswith('J'):
+                pos_dict['J'] += 1
+            elif pos.startswith('V'):
+                pos_dict['V'] += 1
+            elif pos.startswith('N'):
+                pos_dict['N'] += 1
+            elif pos.startswith('R'):
+                pos_dict['R'] += 1
+
+        return pos_dict
+
+    def get_stop_word_perc(self, sentence):
+        tokens = nltk.word_tokenize(sentence)
+        words_pos = nltk.pos_tag(tokens)
+        non_sw = self.remove_stop_words(tokens)
+
+        if len(tokens) == 0:
+            raise Exception("no words in sentence")
+        
+        return (len(tokens) - len(non_sw)) / float(len(tokens)) * 100
+
+    # not participles
+    def get_verb_count(self, sentence):
+        tokens = nltk.word_tokenize(sentence)
+        words_pos = nltk.pos_tag(tokens)
+
+        count = 0
+        
+        for word, pos in words_pos:
+            if pos.startswith('V') and pos != 'VBN' and pos != 'VBG':
+                count += 1
+
+        return count
+    
     def add_to_dict(self, new_dict, accumulator_dict):
         for key, value in new_dict.items():
             if key in accumulator_dict:

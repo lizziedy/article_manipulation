@@ -277,7 +277,11 @@ def data_to_csv(data, type_re, file_path):
                 if key == ID:
                     review.append(review_id + content[key])
                 else:
-                    review.append(content[key])
+                    if key in content:
+                        review.append(content[key])
+                    else:
+                        print(key)
+                        review.append(-1)
             review_array.append(review)
 
     with open(file_path, 'w') as csvfile:
