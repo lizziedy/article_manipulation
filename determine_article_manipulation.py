@@ -92,9 +92,15 @@ def analyze_automated_reviews():
     gra.get_other_agreement_statistics('baseline/test_articles.json', 'articles/automated_master_agreement_stats.json', review_path='articles/master_reviews.json', has_reviewers=False)
 
 def do_machine_learning():
-    #mlr.article_data()
-    #mlr.article_data(csv_file='baseline/test_articles_annotated_results.csv')
-    mlr.sample()
+    mlr.article_data()
+    mlr.train_feature_data()
+
+    # with same dataset
+    mlr.create_train_test_sets()
+    mlr.article_data_preset()
+    mlr.train_feature_data_preset()
+    mlr.test_baseline()
+
     
     
 if __name__ == '__main__':
@@ -119,8 +125,11 @@ if __name__ == '__main__':
     #taf.get_article_features("articles/immigration/immigration-bill-goes-down.txt", "immigration", master_reviews)
     #taf.get_test_article_features()
     #mlr.train_feature_data('features/immigration/immigration-bill-goes-down.csv')
-    mlr.train_feature_data('features/train_features.csv')
+    #mlr.train_feature_data(csv_file='features/train_features.csv')
     #mlr.article_data()
+    #mlr.train_feature_data_preset(csv_file='features/train_features.csv')
+    #mlr.article_data_preset()
+    mlr.test_baseline()
 
     #ds.get_sentiment_graphs(['baseline/education/', 'baseline/stock/', 'baseline/immigration/'])
     #gra.get_reviewer_agreement_statistics()
